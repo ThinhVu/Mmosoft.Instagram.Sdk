@@ -170,15 +170,14 @@ ChainingEna: {ChainingEnabled}
         }
 
         /// <summary>
-        /// Change user info -- at the moment, this method does not work correctly
+        /// Change user info
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
         private bool SetUserInfo(UserInfo user)
         {            
             var chainingEnable = user.ChainingEnabled ? "on" : "off";
-            var data = $"first_name={WebUtility.UrlEncode(user.FirstName)}&email={user.Email}&username={WebUtility.UrlEncode(user.Username)}&phone_number={WebUtility.UrlEncode(user.PhoneNumber)}&gender={user.Gender}&biography={WebUtility.UrlEncode(user.Biography)}&external_url={WebUtility.UrlEncode(user.ExternalUrl)}&chaining_enabled={chainingEnable}";
-            // first_name=ThinhVu93&email=vutrongthinhk7%40gmail.com&username=thinhvu93aloha&phone_number=%2B84+164+965+3841&gender=2&biography=Gai+Gu+la+phu+du%2C+MU+la+tat+ca&external_url=https%3A%2F%2Fwww.facebook.com%2Ff.i.n.0ne&chaining_enabled=on
+            var data = $"first_name={WebUtility.UrlEncode(user.FirstName)}&email={user.Email}&username={WebUtility.UrlEncode(user.Username)}&phone_number={WebUtility.UrlEncode(user.PhoneNumber)}&gender={user.Gender}&biography={WebUtility.UrlEncode(user.Biography)}&external_url={WebUtility.UrlEncode(user.ExternalUrl)}&chaining_enabled={chainingEnable}";            
             var content = Encoding.ASCII.GetBytes(data);            
             var request = HttpRequestBuilder.Post(new Uri("https://www.instagram.com/accounts/edit/"), mCookieContainer);
             // Missing referer get 403 - forbiden

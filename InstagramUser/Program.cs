@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Net;
-using static InstagramUser.Instaguser;
 
 namespace InstagramUser
 {
