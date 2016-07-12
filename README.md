@@ -1,2 +1,3 @@
 # InstagramUser
-Instagram API without OAuth
+Instagram API without OAuth.
+
