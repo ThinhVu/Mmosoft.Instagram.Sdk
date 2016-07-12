@@ -1,16 +1,16 @@
 ﻿using System;
+using System.Net;
+using static InstagramUser.Instaguser;
 
 namespace InstagramUser
-{          
+{
     class Program
     {
         static void Main(string[] args)
-        {                     
-            var iUser = new User("Your_UserName","Your_Password");
-            // At the moment, this function does not work correctly.
-            var changeExUrlResult = iUser.ChangeExternalUrl("https://abc.com");
-            Console.WriteLine("Change success? " + changeExUrlResult);                                   
+        {           
+            var iUser = new Instaguser("Your username", "You password");
+            Console.WriteLine("Set username " + iUser.SetUsername("new username"));
             Console.ReadLine();
         }
-    }    
+    }
 }

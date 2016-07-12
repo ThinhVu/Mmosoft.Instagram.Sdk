@@ -47,8 +47,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="User.cs" />
-    <Compile Include="Logger.cs" />
+    <Compile Include="HttpRequestBuilder.cs" />
+    <Compile Include="Instaguser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

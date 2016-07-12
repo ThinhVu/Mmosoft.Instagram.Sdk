@@ -2,6 +2,5 @@ D:\code\InstagramUser\InstagramUser\bin\Debug\InstagramUser.exe
 D:\code\InstagramUser\InstagramUser\bin\Debug\InstagramUser.pdb
 D:\code\InstagramUser\InstagramUser\bin\Debug\Newtonsoft.Json.dll
 D:\code\InstagramUser\InstagramUser\bin\Debug\Newtonsoft.Json.xml
-D:\code\InstagramUser\InstagramUser\obj\Debug\InstagramUser.csprojResolveAssemblyReference.cache
 D:\code\InstagramUser\InstagramUser\obj\Debug\InstagramUser.exe
 D:\code\InstagramUser\InstagramUser\obj\Debug\InstagramUser.pdb
