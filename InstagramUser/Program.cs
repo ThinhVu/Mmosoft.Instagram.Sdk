@@ -6,8 +6,22 @@ namespace InstagramUser
     {
         static void Main(string[] args)
         {           
-            var iUser = new Instaguser("Your username", "You password");
-            Console.WriteLine("Set username " + iUser.SetUsername("new username"));
+            var user = new Instaguser("your username ", "your password");
+
+            // Set user info
+            var s = user.SetUserBiography("This is my instagram biography");
+            Console.WriteLine(s);
+
+            // Get my user info
+            var myInfo = user.PublicInfo;
+
+            // Show my avater
+            Console.WriteLine(myInfo.profile_pic_url);
+
+            // Get other user info
+            var theRockPublicInfo = user.GetUserPublicInfo("therock");
+            var hoobclips = user.GetUserPublicInfo("hoodclips");
+            
             Console.ReadLine();
         }
     }
