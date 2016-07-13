@@ -28,8 +28,7 @@ namespace InstagramUser
             request.ProtocolVersion = HttpVersion.Version11;
             request.Host = uri.Host;
             request.Accept = "*/*";
-            request.KeepAlive = true;
-            request.AllowAutoRedirect = false;     
+            request.KeepAlive = true;               
             request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:46.0) Gecko/20100101 Firefox/46.0";
             request.Headers.Add("Accept-Language", "en-US,en;q=0.5");
             request.Headers.Add("Accept-Encoding", "gzip, deflate, br");
