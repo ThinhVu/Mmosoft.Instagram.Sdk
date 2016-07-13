@@ -1,10 +1,7 @@
 ﻿using System.Collections.Generic;
 
 namespace InstagramUser
-{    
-    /// We need to fix all of this stuff -- very messy
-
-
+{
     /// <summary>
     /// Contain follow number info
     /// </summary>

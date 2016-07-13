@@ -10,6 +10,7 @@ namespace InstagramUser
             var request = WebRequest.Create(uri) as HttpWebRequest;
             request.Method = WebRequestMethods.Http.Post;
             request.ProtocolVersion = HttpVersion.Version11;
+            request.Timeout = 10000;
             request.Host = uri.Host;
             request.Accept = "*/*";
             request.KeepAlive = true;            
@@ -26,6 +27,7 @@ namespace InstagramUser
             var request = WebRequest.Create(uri) as HttpWebRequest;
             request.Method = WebRequestMethods.Http.Get;
             request.ProtocolVersion = HttpVersion.Version11;
+            request.Timeout = 10000;
             request.Host = uri.Host;
             request.Accept = "*/*";
             request.KeepAlive = true;               

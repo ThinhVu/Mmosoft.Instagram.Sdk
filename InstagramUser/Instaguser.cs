@@ -6,6 +6,7 @@
     using System.Text;
     using Newtonsoft.Json;
     using System.IO.Compression;
+    using System.Diagnostics;
 
     public class Instaguser : IInstaguser
     {
@@ -13,6 +14,10 @@
         /// CookieContainer help HttpWebRequest keep session
         /// </summary>
         private CookieContainer mCoockieC;
+        /// <summary>
+        /// Indicate that user logged on not
+        /// </summary>
+        private bool mLoggedIn;
         /// <summary>
         /// Username
         /// </summary>
@@ -22,25 +27,16 @@
         /// </summary>
         public string Password { get; set; }
         /// <summary>
-        /// Indicate that user logged on not
-        /// </summary>
-        private bool LoggedIn;
-        /// <summary>
         /// User public info
         /// </summary>
         public User PublicInfo => GetUserPublicInfo(Username);
-        
-        /// <summary>
-        /// Store editable info / in edit page
-        /// </summary>
-        private dynamic mEditableInfo;
 
         /// <summary>
         /// Create new instance of instaguser
         /// </summary>
         public Instaguser() : this(string.Empty, string.Empty)
         {
-            
+
         }
 
         /// <summary>
@@ -55,7 +51,7 @@
 
             // Remove Expect: 100-continue header
             System.Net.ServicePointManager.Expect100Continue = false;
-            mCoockieC = new CookieContainer();            
+            mCoockieC = new CookieContainer();
         }
 
         /// <summary>
@@ -65,26 +61,32 @@
         /// <param name="password"></param>
         public bool LogIn()
         {
+            // If user logged in, don't need logged anymore
+            if (mLoggedIn) return true;
             try
             {
-                // If user logged in, don't need logged anymore
-                if (LoggedIn) return true;
-
-                // Bootstrap progress
+                // Get bootstrap cookie
                 var bootstrapRequest = HttpRequestBuilder.Get(new Uri("https://www.instagram.com/accounts/login/"), mCoockieC);
                 bootstrapRequest.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
                 bootstrapRequest.Headers["Upgrade-Insecure-Requests"] = "1";
-                var bootstrapResponse = bootstrapRequest.GetResponse() as HttpWebResponse;
-                mCoockieC.Add(bootstrapResponse.Cookies);
-                bootstrapResponse.Close();
+                using (var bootstrapResponse = bootstrapRequest.GetResponse() as HttpWebResponse)
+                {
+                    mCoockieC.Add(bootstrapResponse.Cookies);
+                }
+            }
+            catch (Exception bex)
+            {
+                Debug.WriteLine("Bootstrap progress meet exception " + bex.Message);
+                throw;
+            }
 
-                // Login
+            try
+            {
                 var data = $"username={Username}&password={Password}";
                 var content = Encoding.ASCII.GetBytes(data);
 
-                // Create request
+                var request = HttpRequestBuilder.Post(new Uri("https://www.instagram.com/accounts/login/ajax/"), mCoockieC);
                 // Missing referer get 403 - forbiden status code
-                var request = HttpRequestBuilder.Post(new Uri("https://www.instagram.com/accounts/login/ajax/"), mCoockieC);                
                 request.Referer = "https://www.instagram.com/accounts/login/";
                 request.ContentType = "application/x-www-form-urlencoded";
                 request.ContentLength = content.Length;
@@ -93,106 +95,124 @@
                 request.Headers["X-CSRFToken"] = mCoockieC.GetCookies(new Uri("https://www.instagram.com"))["csrftoken"].Value;
                 request.Headers["X-Instagram-AJAX"] = "1";
                 request.Headers["X-Requested-With"] = "XMLHttpRequest";
-                
+
                 // Send login data
                 using (var requestStream = request.GetRequestStream())
                 {
                     requestStream.Write(content, 0, content.Length);
-                    var response = request.GetResponse() as HttpWebResponse;
-
-                    using (var streamReader = new StreamReader(response.GetResponseStream()))
+                    using (var response = request.GetResponse() as HttpWebResponse)
+                    using (var responsStream = response.GetResponseStream())
+                    using (var streamReader = new StreamReader(responsStream))
                     {
                         var responseData = streamReader.ReadToEnd();
-                        response.Close();
 
-                        dynamic dataObject = JsonConvert.DeserializeObject(responseData);
-                        LoggedIn = dataObject.authenticated.Value;
+                        dynamic dynObj = JsonConvert.DeserializeObject(responseData);
+                        mLoggedIn = dynObj.authenticated.Value;
 
-                        if (LoggedIn) mCoockieC.Add(response.Cookies);                                                
-                        return LoggedIn;
+                        if (mLoggedIn) mCoockieC.Add(response.Cookies);
+                        return mLoggedIn;
                     }
-                }                
+                }
             }
             catch (Exception ex)
             {
-                throw ex;
-            }
-        }
-        
-        /// <summary>
-        /// Pull editable info - this method require user logged in, of course
-        /// </summary>
-        /// <returns></returns>
-        public void PullEditableInfo()
-        {
-            try
-            {                
-                var uri = new Uri("https://www.instagram.com/accounts/edit/?__a=1");
-                var request = HttpRequestBuilder.Get(uri, mCoockieC);
-                request.Referer = $"https://www.instagram.com/{Username}/";
-                request.Headers["X-Requested-With"] = "XMLHttpRequest";
-                var response = request.GetResponse() as HttpWebResponse;
-                mCoockieC.Add(response.Cookies);
-                // Read data
-                using (var gzipStream = new GZipStream(response.GetResponseStream(), CompressionMode.Decompress))
-                using (var streamReader = new StreamReader(gzipStream))
-                {
-                    var data = streamReader.ReadToEnd();
-
-                    dynamic jObject = JsonConvert.DeserializeObject(data);
-                    mEditableInfo = jObject.form_data;
-                    response.Close();                    
-                }
-            }
-            catch
-            {
+                Debug.WriteLine("Login progress occur exception " + ex.Message);
                 throw;
             }
         }
 
         /// <summary>
-        /// Change user info
+        /// Get user profile => need logged in
+        /// </summary>
+        /// <returns></returns>
+        private dynamic GetProfile()
+        {
+            try
+            {
+                Debug.WriteLine("Pull editable info");
+                var uri = new Uri("https://www.instagram.com/accounts/edit/?__a=1");
+                var request = HttpRequestBuilder.Get(uri, mCoockieC);
+                request.Referer = $"https://www.instagram.com/{Username}/";
+                request.Headers["X-Requested-With"] = "XMLHttpRequest";
+                request.AllowAutoRedirect = false;
+                using (var response = request.GetResponse() as HttpWebResponse)
+                {
+                    mCoockieC.Add(response.Cookies);
+                    using (var responseStream = response.GetResponseStream())
+                    using (var gzipStream = new GZipStream(responseStream, CompressionMode.Decompress))
+                    using (var streamReader = new StreamReader(gzipStream))
+                    {
+                        var data = streamReader.ReadToEnd();
+                        return ((dynamic)JsonConvert.DeserializeObject(data)).form_data;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Update user profile
         /// </summary>
         /// <param name="user"></param>
         /// <returns>dynamic data maybe dangerous but i think some time dangerous is good LOL!!! - cause i'm lazy</returns>
-        private bool PushEditableInfo(dynamic form_data)
+        private bool UpdateProfile(dynamic form_data)
         {
-            if (!LoggedIn) throw new Exception("User not logged in");
-                
-            var chainingEnable = form_data.chaining_enabled.Value ? "on" : "off";
-            var data = $"first_name={WebUtility.UrlEncode(form_data.first_name.Value)}&email={form_data.email.Value}&username={WebUtility.UrlEncode(form_data.username.Value)}&phone_number={WebUtility.UrlEncode(form_data.phone_number.Value)}&gender={form_data.gender.Value}&biography={WebUtility.UrlEncode(form_data.biography.Value)}&external_url={WebUtility.UrlEncode(form_data.external_url.Value)}&chaining_enabled={chainingEnable}";
-            var content = Encoding.ASCII.GetBytes(data);
-            var request = HttpRequestBuilder.Post(new Uri("https://www.instagram.com/accounts/edit/"), mCoockieC);
-            // Missing referer get 403 - forbiden
-            request.Referer = "https://www.instagram.com/accounts/edit/";
-            request.ContentType = "application/x-www-form-urlencoded";
-            request.ContentLength = content.Length;
-            request.KeepAlive = true;
-            request.Headers["Origin"] = "https://www.instagram.com";
-            request.Headers["X-CSRFToken"] = mCoockieC.GetCookies(new Uri("https://www.instagram.com"))["csrftoken"].Value;
-            request.Headers["X-Instagram-AJAX"] = "1";
-            request.Headers["X-Requested-With"] = "XMLHttpRequest";
-            using (var requestStream = request.GetRequestStream())
+            Debug.WriteLine("Update profile");
+
+            string chainingEnable = "", data = "";
+
+            try
             {
-                requestStream.Write(content, 0, content.Length);
-                try
+                chainingEnable = form_data.chaining_enabled.Value ? "on" : "off";
+                data = $"first_name={WebUtility.UrlEncode(form_data.first_name.Value)}&email={form_data.email.Value}&username={WebUtility.UrlEncode(form_data.username.Value)}&phone_number={WebUtility.UrlEncode(form_data.phone_number.Value)}&gender={form_data.gender.Value}&biography={WebUtility.UrlEncode(form_data.biography.Value)}&external_url={WebUtility.UrlEncode(form_data.external_url.Value)}&chaining_enabled={chainingEnable}";
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                throw;
+            }
+
+            try
+            {
+                var content = Encoding.ASCII.GetBytes(data);
+                var request = HttpRequestBuilder.Post(new Uri("https://www.instagram.com/accounts/edit/"), mCoockieC);
+                request.Referer = "https://www.instagram.com/accounts/edit/";
+                request.ContentType = "application/x-www-form-urlencoded";
+                request.ContentLength = content.Length;
+                request.KeepAlive = true;
+                request.Headers["Origin"] = "https://www.instagram.com";
+                // maybe exception if mCookieC not contain csrftoken
+                request.Headers["X-CSRFToken"] = mCoockieC.GetCookies(new Uri("https://www.instagram.com"))["csrftoken"].Value;
+                request.Headers["X-Instagram-AJAX"] = "1";
+                request.Headers["X-Requested-With"] = "XMLHttpRequest";
+
+                using (var requestStream = request.GetRequestStream())
                 {
-                    var response = request.GetResponse() as HttpWebResponse;
-                    mCoockieC.Add(response.Cookies);
-                    using (var streamReader = new StreamReader(response.GetResponseStream()))
+                    requestStream.Write(content, 0, content.Length);
+
+                    using (var response = request.GetResponse() as HttpWebResponse)
                     {
-                        var responseData = streamReader.ReadToEnd();
-                        response.Close();
-                        // If we get result, it always return status ok. Otherwise, exception will occur.
-                        return responseData == "{\"status\": \"ok\"}";
+                        mCoockieC.Add(response.Cookies);
+                        using (var responseStream = response.GetResponseStream())
+                        using (var streamReader = new StreamReader(responseStream))
+                        {
+                            // If we get result, it always return status ok. Otherwise, exception will occur.                                           
+                            return streamReader.ReadToEnd() == "{\"status\": \"ok\"}";
+                        }
                     }
+
                 }
-                catch (Exception ex)
-                {
-                    // When you change your username with existed username, you will receive 404 error
-                    // and obviously exception will occur. In this case, just return false
-                    return false;
-                }
+            }
+            catch (Exception ex)
+            {
+                // When you change your username with existed username, you will receive 404 error
+                // and obviously exception will occur. In this case, just return false
+                Debug.WriteLine(ex.Message);
+                return false;
             }
         }
 
@@ -203,18 +223,17 @@
         /// <returns></returns>
         public bool SetBiography(string newBiography)
         {
-            if (mEditableInfo == null) PullEditableInfo();
-
-            // store for rollback purpose
-            var oldBiograph = mEditableInfo.biography.Value;
-
-            // update info
-            mEditableInfo.biography = newBiography;
-            if (PushEditableInfo(mEditableInfo)) return true;
-
-            // update fail -> rollback
-            mEditableInfo.biography = oldBiograph;
-            return false;
+            try
+            {
+                dynamic profile = GetProfile();
+                profile.biography.Value = newBiography;
+                return UpdateProfile(profile);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Change biography error " + ex.Message);
+                throw;
+            }
         }
 
         /// <summary>
@@ -222,61 +241,62 @@
         /// </summary>
         /// <param name="username"></param>
         /// <returns></returns>
-        public bool SetUsername(string username)
+        public bool SetUsername(string newUsername)
         {
-            if (mEditableInfo == null) PullEditableInfo();
-
-            var oldUsername = mEditableInfo.username.Value;
-
-            // update info
-            mEditableInfo.username = username;
-            if (PushEditableInfo(mEditableInfo)) return true;
-
-            // update fail -> rollback
-            mEditableInfo.username = oldUsername;
-            return false;
+            try
+            {
+                dynamic profile = GetProfile();
+                profile.username.Value = newUsername;
+                bool updateSuccess = UpdateProfile(profile);
+                if (updateSuccess) Username = newUsername;
+                return updateSuccess;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Change username error " + ex.Message);
+                throw;
+            }
         }
-       
+
+        /// <summary>
+        /// Follow
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns></returns>
         public bool Follow(string username)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Like
+        /// </summary>
+        /// <param name="postId"></param>
+        /// <returns></returns>
         public bool Like(string postId)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Comment
+        /// </summary>
+        /// <param name="postId"></param>
+        /// <param name="comment"></param>
+        /// <returns></returns>
         public bool Comment(string postId, string comment)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Report
+        /// </summary>
+        /// <param name="postId"></param>
+        /// <returns></returns>
         public bool Report(string postId)
         {
             throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Retrieve user public info
-        /// This method doesn't require logged in
-        /// </summary>
-        public static User GetUserPublicInfo(string username)
-        {
-            var uri = new Uri($"https://www.instagram.com/{username}/?__a=1");
-            var request = HttpRequestBuilder.Get(uri, new CookieContainer());
-            request.Referer = $"https://www.instagram.com/{username}/";
-            request.Headers["X-Requested-With"] = "XMLHttpRequest";
-            var response = request.GetResponse() as HttpWebResponse;
-            // Read data
-            using (var gzipStream = new GZipStream(response.GetResponseStream(), CompressionMode.Decompress))
-            using (var streamReader = new StreamReader(gzipStream))
-            {
-                var data = streamReader.ReadToEnd();
-                dynamic rootObject = JsonConvert.DeserializeObject<RootObject>(data);
-                response.Close();
-                return rootObject.user;
-            }
         }
 
         /// <summary>
@@ -292,5 +312,24 @@
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Retrieve user public info
+        /// This method doesn't require logged in
+        /// </summary>
+        public static User GetUserPublicInfo(string username)
+        {
+            var uri = new Uri($"https://www.instagram.com/{username}/?__a=1");
+            var request = HttpRequestBuilder.Get(uri, new CookieContainer());
+            request.Referer = $"https://www.instagram.com/{username}/";
+            request.Headers["X-Requested-With"] = "XMLHttpRequest";
+            using (var response = request.GetResponse() as HttpWebResponse)
+            using (var responseStream = response.GetResponseStream())
+            using (var gzipStream = new GZipStream(responseStream, CompressionMode.Decompress))
+            using (var streamReader = new StreamReader(gzipStream))
+            {
+                var data = streamReader.ReadToEnd();
+                return JsonConvert.DeserializeObject<RootObject>(data).user;
+            }
+        }
     }
 }
