@@ -183,7 +183,7 @@
                         {
                             // If we get result, it always return status ok. Otherwise, exception will occur.                                           
                             var responseData = streamReader.ReadToEnd();
-                            return JsonConvert.DeserializeObject<UpdateProfileResult>(responseData);                            
+                            return JsonConvert.DeserializeObject<UpdateProfileResult>(responseData);
                         }
                     }
                 }
@@ -246,15 +246,16 @@
         /// <returns></returns>
         public FollowResult Follow(string username)
         {
+
+            Debug.WriteLine("Following " + username);
+            var publicInfo = GetPublicInfo(username);
+            var request = HttpRequestBuilder.Post($"https://www.instagram.com/web/friendships/{publicInfo.user.id}/follow/", mCoockieC);
+            request.Referer = $"https://www.instagram.com/{publicInfo.user.username}/";
+            request.Headers["X-CSRFToken"] = mCoockieC.GetCookies(new Uri("https://www.instagram.com"))["csrftoken"].Value;
+            request.Headers["X-Instagram-AJAX"] = "1";
+            request.Headers["X-Requested-With"] = "XMLHttpRequest";
             try
             {
-                Debug.WriteLine("Following " + username);
-                var publicInfo = GetPublicInfo(username);
-                var request = HttpRequestBuilder.Post($"https://www.instagram.com/web/friendships/{publicInfo.user.id}/follow/", mCoockieC);
-                request.Referer = $"https://www.instagram.com/{publicInfo.user.username}/";
-                request.Headers["X-CSRFToken"] = mCoockieC.GetCookies(new Uri("https://www.instagram.com"))["csrftoken"].Value;
-                request.Headers["X-Instagram-AJAX"] = "1";
-                request.Headers["X-Requested-With"] = "XMLHttpRequest";
                 using (var response = request.GetResponse() as HttpWebResponse)
                 {
                     mCoockieC.Add(response.Cookies);
@@ -296,22 +297,30 @@
             request.Headers["X-CSRFToken"] = mCoockieC.GetCookies(new Uri("https://www.instagram.com"))["csrftoken"].Value;
             request.Headers["X-Instagram-AJAX"] = "1";
             request.Headers["X-Requested-With"] = "XMLHttpRequest";
-            using (var response = request.GetResponse() as HttpWebResponse)
+            try
             {
-                mCoockieC.Add(response.Cookies);
-                if (request.HaveResponse)
+                using (var response = request.GetResponse() as HttpWebResponse)
                 {
-                    using (var responseStream = response.GetResponseStream())
-                    using (var streamReader = new StreamReader(responseStream))
+                    mCoockieC.Add(response.Cookies);
+                    if (request.HaveResponse)
                     {
-                        var responseData = streamReader.ReadToEnd();
-                        return JsonConvert.DeserializeObject<Models.LikeResult>(responseData);
+                        using (var responseStream = response.GetResponseStream())
+                        using (var streamReader = new StreamReader(responseStream))
+                        {
+                            var responseData = streamReader.ReadToEnd();
+                            return JsonConvert.DeserializeObject<Models.LikeResult>(responseData);
+                        }
+                    }
+                    else
+                    {
+                        throw new WebException("no response");
                     }
                 }
-                else
-                {
-                    throw new WebException("no response");
-                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                throw ex;
             }
         }
 
@@ -332,26 +341,35 @@
             request.Headers["X-CSRFToken"] = mCoockieC.GetCookies(new Uri("https://www.instagram.com"))["csrftoken"].Value;
             request.Headers["X-Instagram-AJAX"] = "1";
             request.Headers["X-Requested-With"] = "XMLHttpRequest";
-            using (var stream = request.GetRequestStream())
+            try
             {
-                stream.Write(content, 0, content.Length);
-            }
-            using (var response = request.GetResponse() as HttpWebResponse)
-            {
-                mCoockieC.Add(response.Cookies);
-                if (request.HaveResponse)
+                using (var stream = request.GetRequestStream())
                 {
-                    using (var responseStream = response.GetResponseStream())
-                    using (var streamReader = new StreamReader(responseStream))
+                    stream.Write(content, 0, content.Length);
+                }
+                using (var response = request.GetResponse() as HttpWebResponse)
+                {
+                    mCoockieC.Add(response.Cookies);
+                    if (request.HaveResponse)
                     {
-                        var responseData = streamReader.ReadToEnd();
-                        return JsonConvert.DeserializeObject<Models.CommentResult>(responseData);
+                        using (var responseStream = response.GetResponseStream())
+                        using (var streamReader = new StreamReader(responseStream))
+                        {
+                            var responseData = streamReader.ReadToEnd();
+                            return JsonConvert.DeserializeObject<Models.CommentResult>(responseData);
+                        }
+                    }
+                    else
+                    {
+                        throw new WebException("no response");
                     }
                 }
-                else
-                {
-                    throw new WebException("no response");
-                }
+
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                throw ex;
             }
         }
 
@@ -360,23 +378,46 @@
         /// </summary>
         /// <param name="postId"></param>
         /// <returns></returns>
-        public bool Report(string postId)
+        public ReportResult Report(string postId, ReportReasonId reasonId)
         {
-            // I'm a good man, i don't test report XD
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Allow register new user account -- return Models.RegisterResult
-        /// </summary>
-        /// <param name="email"></param>
-        /// <param name="fullName"></param>
-        /// <param name="username"></param>
-        /// <param name="password"></param>
-        /// <returns></returns>
-        public bool Register(string email, string fullName, string username, string password)
-        {
-            throw new NotImplementedException();
+            var data = "reason_id=" + (int)reasonId;
+            var content = Encoding.ASCII.GetBytes(data);
+            var request = HttpRequestBuilder.Post($"https://www.instagram.com/media/{postId}/flag/", mCoockieC);
+            request.ContentType = "application/x-www-form-urlencoded";
+            request.Referer = $"https://www.instagram.com/";
+            request.ContentLength = content.Length;
+            request.Headers["X-CSRFToken"] = mCoockieC.GetCookies(new Uri("https://www.instagram.com"))["csrftoken"].Value;
+            request.Headers["X-Instagram-AJAX"] = "1";
+            request.Headers["X-Requested-With"] = "XMLHttpRequest";
+            try
+            {
+                using (var stream = request.GetRequestStream())
+                {
+                    stream.Write(content, 0, content.Length);
+                }
+                using (var response = request.GetResponse() as HttpWebResponse)
+                {
+                    mCoockieC.Add(response.Cookies);
+                    if (request.HaveResponse)
+                    {
+                        using (var responseStream = response.GetResponseStream())
+                        using (var streamReader = new StreamReader(responseStream))
+                        {
+                            var responseData = streamReader.ReadToEnd();
+                            return JsonConvert.DeserializeObject<ReportResult>(responseData);
+                        }
+                    }
+                    else
+                    {
+                        throw new WebException("no response");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                throw ex;
+            }
         }
 
         /// <summary>

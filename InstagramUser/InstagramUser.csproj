@@ -48,13 +48,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="HttpRequestBuilder.cs" />
-    <Compile Include="Instaguser.cs" />
+    <Compile Include="InstagamUser.cs" />
     <Compile Include="Models\CommentResult.cs" />
     <Compile Include="Models\ProfileResult.cs" />
     <Compile Include="Models\FollowResult.cs" />
     <Compile Include="Models\LikeResult.cs" />
     <Compile Include="Models\LoginResult.cs" />
     <Compile Include="Models\PublicInfoResult.cs" />
+    <Compile Include="Models\ReportResult.cs" />
     <Compile Include="Models\UpdateProfileResult.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

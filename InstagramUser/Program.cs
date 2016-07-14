@@ -1,12 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace InstagramUser
 {
     class Program
     {
         static void Main(string[] args)
-        {            
+        {
+            ReportTest();
             Console.ReadLine();
         }
 
@@ -92,6 +92,19 @@ namespace InstagramUser
                 Console.WriteLine(commentFrom.full_name);
                 Console.WriteLine(commentFrom.username);
                 Console.WriteLine(commentFrom.profile_picture);
+            }
+
+            Console.ReadLine();
+        }
+
+        static void ReportTest()
+        {
+            var user = new InstagamUser("username", "password");        
+            var loginResult = user.LogIn();
+            if (loginResult.authenticated)
+            {
+                var commentResult = user.Report("1289832948493489827", Models.ReportReasonId.NudityOrPornography);
+                Console.WriteLine(commentResult.status);
             }
 
             Console.ReadLine();
