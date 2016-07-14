@@ -30,8 +30,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>
-    </StartupObject>
+    <StartupObject>InstagramUser.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -49,9 +48,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="HttpRequestBuilder.cs" />
-    <Compile Include="IInstaguser.cs" />
     <Compile Include="Instaguser.cs" />
-    <Compile Include="Model.cs" />
+    <Compile Include="Models\CommentResult.cs" />
+    <Compile Include="Models\ProfileResult.cs" />
+    <Compile Include="Models\FollowResult.cs" />
+    <Compile Include="Models\LikeResult.cs" />
+    <Compile Include="Models\LoginResult.cs" />
+    <Compile Include="Models\PublicInfoResult.cs" />
+    <Compile Include="Models\UpdateProfileResult.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
