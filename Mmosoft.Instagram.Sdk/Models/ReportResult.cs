@@ -1,4 +1,4 @@
-﻿namespace InstagramUser.Models
+﻿namespace Mmosoft.Instagram.Sdk.Models
 {
     public class ReportResult
     {        

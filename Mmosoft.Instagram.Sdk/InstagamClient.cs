@@ -1,4 +1,4 @@
-﻿namespace InstagramUser
+﻿namespace Mmosoft.Instagram.Sdk
 {
     using System;
     using System.IO;
@@ -9,7 +9,7 @@
     using System.Diagnostics;
     using Models;
 
-    public class InstagamUser
+    public class InstagramClient
     {
         /// <summary>
         /// CookieContainer help HttpWebRequest keep session
@@ -31,7 +31,7 @@
         /// <summary>
         /// Create new instance of instaguser
         /// </summary>
-        public InstagamUser() : this(string.Empty, string.Empty)
+        public InstagramClient() : this(string.Empty, string.Empty)
         {
 
         }
@@ -41,13 +41,17 @@
         /// </summary>
         /// <param name="username"></param>
         /// <param name="password"></param>
-        public InstagamUser(string username, string password)
+        public InstagramClient(string username, string password)
         {
+            if (string.IsNullOrWhiteSpace(username))
+                throw new ArgumentException("username must not empty or null");
+
+            if (string.IsNullOrWhiteSpace(password))
+                throw new ArgumentException("password must not empty or null");
+
             Username = username;
             Password = password;
-
-            // Remove Expect: 100-continue header
-            System.Net.ServicePointManager.Expect100Continue = false;
+            
             mCoockieC = new CookieContainer();
         }
 

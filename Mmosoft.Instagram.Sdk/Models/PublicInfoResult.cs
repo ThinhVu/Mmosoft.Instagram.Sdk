@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace InstagramUser.Models
+namespace Mmosoft.Instagram.Sdk.Models
 {        
     public class PublicInfoResult
     {

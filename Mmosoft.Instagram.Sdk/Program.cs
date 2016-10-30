@@ -4,20 +4,23 @@ namespace InstagramUser
 {
     class Program
     {
+        static string username = "username";
+        static string password = "password";
+
         static void Main(string[] args)
         {
-            ReportTest();
+            LoginTest();
             Console.ReadLine();
         }
 
         static void LoginTest()
         {
-            var user = new InstagamUser("username", "password");
+            var user = new InstagamUser(username, password);
             var loginResult = user.LogIn();
             if (loginResult.authenticated)
             {
                 Console.WriteLine(user.SetBiography("new biography"));
-                Console.WriteLine(user.SetUsername("new username"));
+                Console.WriteLine(user.SetUsername("thinhvu93aloha"));
             }                       
         }   
 
@@ -29,7 +32,7 @@ namespace InstagramUser
         
         static void SetUserInfoTest()
         {
-            var user = new InstagamUser("usernaem", "password");
+            var user = new InstagamUser(username, password);
 
             var loginResult = user.LogIn();
             if (loginResult.authenticated)
@@ -46,7 +49,7 @@ namespace InstagramUser
 
         static void FollowTest()
         {
-            var user = new InstagamUser("username", "password");
+            var user = new InstagamUser(username, password);
             
             var loginResult = user.LogIn();
             if (loginResult.authenticated)
@@ -62,7 +65,7 @@ namespace InstagramUser
         
         static void LikeTest()
         {
-            var user = new InstagamUser("username", "password");
+            var user = new InstagamUser(username, password);
 
             var loginResult = user.LogIn();
             if (loginResult.authenticated)
@@ -76,7 +79,7 @@ namespace InstagramUser
 
         static void CommentTest()
         {
-            var user = new InstagamUser("username", "password");
+            var user = new InstagamUser(username, password);
 
             var loginResult = user.LogIn();
             if (loginResult.authenticated)
@@ -99,7 +102,7 @@ namespace InstagramUser
 
         static void ReportTest()
         {
-            var user = new InstagamUser("username", "password");        
+            var user = new InstagamUser(username, password);
             var loginResult = user.LogIn();
             if (loginResult.authenticated)
             {
