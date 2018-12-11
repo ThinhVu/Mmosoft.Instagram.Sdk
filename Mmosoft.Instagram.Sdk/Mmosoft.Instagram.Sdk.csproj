@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Credential.cs" />
     <Compile Include="HttpRequestBuilder.cs" />
     <Compile Include="InstagamClient.cs" />
     <Compile Include="Models\CommentResult.cs" />

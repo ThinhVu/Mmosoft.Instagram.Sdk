@@ -1,38 +1,32 @@
-﻿using System;
+﻿using Mmosoft.Instagram.Sdk;
+using System;
 
 namespace InstagramUser
 {
     class Program
     {
-        static string username = "username";
-        static string password = "password";
-
         static void Main(string[] args)
         {
-            LoginTest();
-            Console.ReadLine();
-        }
+            var username = Credential.GetYourUsername();
+            var password = Credential.GetYourPassword();
 
-        static void LoginTest()
-        {
-            var user = new InstagamUser(username, password);
+            var user = new InstagramClient(username, password);
             var loginResult = user.LogIn();
             if (loginResult.authenticated)
             {
-                Console.WriteLine(user.SetBiography("new biography"));
-                Console.WriteLine(user.SetUsername("thinhvu93aloha"));
-            }                       
-        }   
-
-        static void GetPublicInfoTest()
-        {
-            var theRockpublicInfo = InstagamUser.GetPublicInfo("therock");
-            var hoobclipspublicInfo = InstagamUser.GetPublicInfo("hoodclips");
+                // tested on December 11 2018
+                var theRockpublicInfo = user.GetPublicInfo("therock");
+            }
+            Console.ReadLine();
         }
-        
+
+
         static void SetUserInfoTest()
         {
-            var user = new InstagamUser(username, password);
+            var username = Credential.GetYourUsername();
+            var password = Credential.GetYourPassword();
+
+            var user = new InstagramClient(username, password);
 
             var loginResult = user.LogIn();
             if (loginResult.authenticated)
@@ -49,7 +43,10 @@ namespace InstagramUser
 
         static void FollowTest()
         {
-            var user = new InstagamUser(username, password);
+            var username = Credential.GetYourUsername();
+            var password = Credential.GetYourPassword();
+
+            var user = new InstagramClient(username, password);
             
             var loginResult = user.LogIn();
             if (loginResult.authenticated)
@@ -65,7 +62,10 @@ namespace InstagramUser
         
         static void LikeTest()
         {
-            var user = new InstagamUser(username, password);
+            var username = Credential.GetYourUsername();
+            var password = Credential.GetYourPassword();
+
+            var user = new InstagramClient(username, password);
 
             var loginResult = user.LogIn();
             if (loginResult.authenticated)
@@ -79,7 +79,10 @@ namespace InstagramUser
 
         static void CommentTest()
         {
-            var user = new InstagamUser(username, password);
+            var username = Credential.GetYourUsername();
+            var password = Credential.GetYourPassword();
+
+            var user = new InstagramClient(username, password);
 
             var loginResult = user.LogIn();
             if (loginResult.authenticated)
@@ -102,11 +105,14 @@ namespace InstagramUser
 
         static void ReportTest()
         {
-            var user = new InstagamUser(username, password);
+            var username = Credential.GetYourUsername();
+            var password = Credential.GetYourPassword();
+
+            var user = new InstagramClient(username, password);
             var loginResult = user.LogIn();
             if (loginResult.authenticated)
             {
-                var commentResult = user.Report("1289832948493489827", Models.ReportReasonId.NudityOrPornography);
+                var commentResult = user.Report("1289832948493489827", Mmosoft.Instagram.Sdk.Models.ReportReasonId.NudityOrPornography);
                 Console.WriteLine(commentResult.status);
             }
 

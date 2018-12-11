@@ -29,14 +29,6 @@
         public string Password { get; set; }
 
         /// <summary>
-        /// Create new instance of instaguser
-        /// </summary>
-        public InstagramClient() : this(string.Empty, string.Empty)
-        {
-
-        }
-
-        /// <summary>
         /// Create new instance of User
         /// </summary>
         /// <param name="username"></param>
@@ -91,8 +83,8 @@
                 request.ContentLength = content.Length;
                 request.KeepAlive = true;
                 request.Headers["Origin"] = "https://www.instagram.com";
-                request.Headers["X-CSRFToken"] = mCoockieC.GetCookies(new Uri("https://www.instagram.com"))["csrftoken"].Value;
-                request.Headers["X-Instagram-AJAX"] = "1";
+                request.Headers["X-CSRFToken"] = mCoockieC.GetCookies(new Uri("https://www.instagram.com"))["csrftoken"].Value;               
+                request.Headers["X-Instagram-AJAX"] = "2c5b336091f6"; // You may need to change this one to get rid of 404 bad request.
                 request.Headers["X-Requested-With"] = "XMLHttpRequest";
 
                 // Send login data
@@ -253,8 +245,8 @@
 
             Debug.WriteLine("Following " + username);
             var publicInfo = GetPublicInfo(username);
-            var request = HttpRequestBuilder.Post($"https://www.instagram.com/web/friendships/{publicInfo.user.id}/follow/", mCoockieC);
-            request.Referer = $"https://www.instagram.com/{publicInfo.user.username}/";
+            var request = HttpRequestBuilder.Post($"https://www.instagram.com/web/friendships/{publicInfo.graphql.user.id}/follow/", mCoockieC);
+            request.Referer = $"https://www.instagram.com/{publicInfo.graphql.user.username}/";
             request.Headers["X-CSRFToken"] = mCoockieC.GetCookies(new Uri("https://www.instagram.com"))["csrftoken"].Value;
             request.Headers["X-Instagram-AJAX"] = "1";
             request.Headers["X-Requested-With"] = "XMLHttpRequest";
@@ -428,18 +420,27 @@
         /// Retrieve user public info
         /// This method doesn't require logged in
         /// </summary>
-        public static PublicInfoResult GetPublicInfo(string username)
+        public PublicInfoResult.RootObject GetPublicInfo(string username)
         {
-            var request = HttpRequestBuilder.Get($"https://www.instagram.com/{username}/?__a=1");
-            request.Referer = $"https://www.instagram.com/{username}/";
-            request.Headers["X-Requested-With"] = "XMLHttpRequest";
-            using (var response = request.GetResponse() as HttpWebResponse)
-            using (var responseStream = response.GetResponseStream())
-            using (var gzipStream = new GZipStream(responseStream, CompressionMode.Decompress))
-            using (var streamReader = new StreamReader(gzipStream))
+            try
             {
-                var data = streamReader.ReadToEnd();
-                return JsonConvert.DeserializeObject<PublicInfoResult>(data);
+                var request = HttpRequestBuilder.Get($"https://www.instagram.com/{username}/?__a=1", mCoockieC);
+                request.Referer = $"https://www.instagram.com/{username}/";
+                request.Headers["X-Requested-With"] = "XMLHttpRequest";
+                request.Timeout = 10000; // 10 seconds
+                using (var response = request.GetResponse() as HttpWebResponse)
+                using (var responseStream = response.GetResponseStream())
+                using (var gzipStream = new GZipStream(responseStream, CompressionMode.Decompress))
+                using (var streamReader = new StreamReader(gzipStream))
+                {
+                    var data = streamReader.ReadToEnd();
+                    return JsonConvert.DeserializeObject<PublicInfoResult.RootObject>(data);
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw;
             }
         }
     }
